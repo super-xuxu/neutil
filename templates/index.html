@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+
+
+
+
+    <meta charset="UTF-8">
+    <title>Network Enhancement Util</title>
+</head>
+<style>
+    #ex1Slider .slider-selection {
+        background: #BABABA;
+    }
+</style>
+
+<script type="text/javascript">
+
+    function FileUpload() {
+        var x = document.getElementById('file_upload').value;
+        if (!x) {
+            alert("Please upload file first!");
+            return false;
+        }
+        var form_data = new FormData();
+        var file_info = $('#file_upload')[0].files[0];
+        form_data.append('file', file_info);
+
+
+        // 提交ajax的请求
+        $.ajax({
+            url: "/upload/",
+            type: 'POST',
+            data: form_data,
+            processData: false,  // tell jquery not to process the data
+            contentType: false,
+            beforeSend: function () {
+
+                $('#loading').modal('show');
+
+            },// tell jquery not to set contentType
+            success: function (res) {
+
+
+                document.getElementById('raw').src = '/static/images/' + res.image;
+                document.getElementById('down').name = res.ne_address;
+                document.getElementById('ne').src = '/static/images/' + res.ne_image;
+                document.getElementById('op_ins').style.display = 'none';
+                document.getElementById("network_image").style.visibility = 'visible';
+                $('#loading').modal('hide');
+
+
+            }
+        }); // end ajax
+    }
+
+
+    function download() {
+
+        if ($('#down').attr("name") == '') {
+
+            return false;
+        }
+
+        filename = document.getElementById('down').getAttribute('name');
+
+        var a = document.createElement('a');
+        a.download = filename;
+        a.href = "/download?filename=" + filename;
+        $("body").append(a);    // 修复firefox中无法触发click
+        a.click();
+        $(a).remove();
+    }
+
+    function check(obj) {
+        var file = document.getElementById("file_upload")
+        fileExt = obj.value.substr(obj.value.lastIndexOf(".")).toLowerCase();//获得文件后缀名
+        if (fileExt != '.txt' && fileExt != '.mat' && fileExt != '.csv') {
+            file.value = '';
+            alert("Please upload the file with the suffix TXT or MAT!");
+            return false;
+        }
+        $('#file_label').text(obj.value.split('\\')[2]);
+
+
+    }
+
+
+</script>
+<body>
+
+<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     data-backdrop='static'>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <p>Please waiting...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="input-group mb-3">
+    <div class="custom-file">
+        <input type="file" name="file" class="custom-file-input" id="file_upload" onchange="check(this)">
+        <label id="file_label" class="custom-file-label" for="inputGroupFile02">Choose file</label>
+    </div>
+
+    <div class="input-group-append">
+        <button class="input-group-text" onclick="FileUpload()" id="">Upload and denoise</button>
+        <button class="input-group-text" id="down" name="" onclick="download()">click here to download</button>
+    </div>
+
+    <!--<button class="input-group-text" type="button" class="btn btn-default" onclick="FileUpload()">Upload and denoise</button>-->
+</div>
+<!--
+<div class="form-group">
+    <label for="exampleInputFile">附件上传</label>
+    <input  type="file" name="file" id="file_upload" onchange="check(this)">
+    <button type="button" class="btn btn-default" onclick="FileUpload()" >上传文件降噪</button>
+</div>-->
+<div id="op_ins" style="display: block;width: 80%;margin-left: 10%;margin-top: 5%">
+    <h2 class="text-primary">How to Use this Util?</h2>
+    <br/>
+    <p class="text-muted">
+        Biological networks are noisy due to the
+        Limitations of measurement technology and inherent natural variation, which can hamper
+        Discovery of network patterns and dynamics.
+    </p>
+    <p class="text-muted">
+        Network enhancement tool is a
+        Method for improving the signal-to-noise ratio of undirected, weighted networks.
+        You can upload a file that stores a biological network, and after the NE tool has been de-noised, you can
+        download it.
+    </p>
+    <p class="text-muted">
+        You can upload files in mat, CSV, and TXT formats.If you upload a TXT file, use ", "as the delimiter
+        for each line.
+    </p>
+
+</div>
+
+<div id="network_image" class="row text-center" style="visibility: hidden;width: 80%;margin-left: 10%">
+    <div class="col text-center ">
+        <h2 class="text-primary">Original</h2>
+
+        <img  style="width: 90%" id="raw" src=""/>
+    </div>
+    <div class="col text-center">
+        <h2 class="text-primary">Enhanced</h2>
+
+        <img  style="width: 90%" id="ne" src=""/>
+    </div>
+</div>
+<br/>
+
+
+
+<div id="footer" class="fixed-bottom">
+    <div class="text-center ">
+        <p>
+            &copy; Copyright 2019 <a href=" http://www.iipl.fudan.edu.cn" target="_blank">上海市智能信息处理重点实验室</a> .
+        </p>
+    </div>
+</div>
+
+</body>
+
+</html>
